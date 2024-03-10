@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Segmentation</title>
+    <style>
+        /* Style for the container */
+        #buttonContainer {
+            text-align: center; /* Center align the contents */
+            margin-top: 20px; /* Add some space between the buttons and the heading */
+        }
+
+        /* Style for the "Choose File" button */
+        #fileInput {
+            color: white; /* Text color */
+            background-color: skyblue; /* Background color */
+            border: none; /* Remove default border */
+            padding: 10px 20px; /* Adjust padding */
+            cursor: pointer; /* Change cursor to pointer on hover */
+        }
+
+        /* Style for the "Upload and Segment" button */
+        #uploadButton {
+            color: white; /* Text color */
+            background-color: pink; /* Background color */
+            border: none; /* Remove default border */
+            padding: 10px 20px; /* Adjust padding */
+            cursor: pointer; /* Change cursor to pointer on hover */
+            margin-left: 20px; /* Add space between the buttons */
+        }
+
+        /* Center align the heading */
+        h1 {
+            text-align: center;
+        }
+
+        /* Center align the grayscale image */
+        #result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Center align the colored instance segmentation image */
+        #result img, #result div {
+            margin-top: 20px;
+            max-width: 100%; /* Ensure the image or div does not exceed its container */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        /* Background color for the entire page */
+        body {
+            background-color: lightyellow;
+        }
+
+        /* Style for grayscale image */
+        #grayImage {
+            max-width: 100%;
+            height: auto;
+            display: none; /* Hide the grayscale image initially */
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Segmentation</h1>
+    <!-- Button container -->
+    <div id="buttonContainer">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" id="fileInput">
+            <button type="submit" id="uploadButton">Upload and Segment</button>
+        </form>
+    </div>
+
+    <div id="result">
+        <!-- Modified grayscale image section -->
+        <div>
+            <h2>Grayscale Image</h2>
+            <!-- Use an <img> tag to display the grayscale image -->
+            <img id="grayImage" alt="Grayscale Image">
+        </div>
+        <!-- End of modified grayscale image section -->
+        <!-- Removed the <img> tag for colored instance segmentation -->
+        <div>
+            <h2>Colored Instance Segmentation</h2>
+            <div id="coloredInstanceImage"></div>
+        </div>
+        <!-- End of modified section -->
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const grayImageElement = document.getElementById('grayImage');
+        const coloredInstanceImageElement = document.getElementById('coloredInstanceImage');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/segment', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Set the grayscale image dynamically
+                    grayImageElement.src = `data:image/jpeg;base64,${data.gray_image}`;
+                    // Show the grayscale image
+                    grayImageElement.style.display = 'block';
+                    // Set the inner HTML of the colored instance segmentation div to display the image
+                    coloredInstanceImageElement.innerHTML = `<img src="data:image/jpeg;base64,${data.colored_instance_image}" alt="Colored Instance Segmentation">`;
+                } else {
+                    console.error('Error:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
